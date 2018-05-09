@@ -5,7 +5,8 @@ namespace Justgrow.Engine.Containers.Hexgrid
 {
     public class Cell
     {
-        public Vector2 Position { get; set; }
+        public int X { get; set; }
+        public int Y { get; set; }
 
         public Cell()
         {

@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
+using Justgrow.Engine.Containers.Hexgrid;
 using Justgrow.Engine.Utilities.LSystem;
 using Justgrow.Engine.Services.Core;
 using Justgrow.Engine.Services.Resources;
@@ -29,7 +30,6 @@ namespace Justgrow.Gameplays.Tree
 
         Vector2 center;
 
-        float rotation;
         SpriteBatch spriteBatch;
 
         protected int age = 0;
@@ -184,16 +184,32 @@ namespace Justgrow.Gameplays.Tree
             rootsGenerator.Execute();
         }
 
+        protected void DrawRoots()
+        {
+            UndergroundGrid.OnCellTraversedDelegate rootRenderer = new UndergroundGrid.OnCellTraversedDelegate(DrawRoot);
+            undergroundGrid.OnCellTraversed += rootRenderer;
+            undergroundGrid.Traverse();
+            undergroundGrid.OnCellTraversed -= rootRenderer;
+        }
+
+        protected void DrawRoot(UndergroundCell cell, Direction direction)
+        {
+            Console.WriteLine($"Rendering cell {cell.X},{cell.Y}");
+        }
+
         public override void DrawSprites(GameTime gameTime, SpriteBatch spriteBatch)
         {
             // Store the sprite batch for the render callback
             this.spriteBatch = spriteBatch;
 
             // Draw the tree
-            DrawTree();
+            // DrawTree();
 
             // Draw the root cells
             DrawGrid();
+
+            // Draw the roots
+            DrawRoots();
         }
 
         protected void OnDrawBranch(bool isBranch, State current, Vector3 from, Vector3 to)

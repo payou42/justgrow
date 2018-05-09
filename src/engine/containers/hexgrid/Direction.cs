@@ -12,7 +12,6 @@ namespace Justgrow.Engine.Containers.Hexgrid
         Top = 4,
         TopLeft = 5,
         TopRight = 6,
-        FarLeft = 7,
-        FarRight = 8
+        Count = 7
     }
 }

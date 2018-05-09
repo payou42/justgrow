@@ -19,5 +19,14 @@ namespace Justgrow.Gameplays.Tree
 {
     public class UndergroundCell : Cell
     {
+        public int Size { get; set; }
+
+        public bool Visited { get; set; }
+
+        public UndergroundCell() : base()
+        {
+            Size = 0;
+            Visited = false;
+        }
     }
 }
