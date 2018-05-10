@@ -86,7 +86,7 @@ namespace Justgrow.Gameplays.Background
             int target = TargetGroundLevel;
             if (groundLevel != target)
             {
-                groundLevel += (int)Math.Ceiling((target - groundLevel) * gameTime.ElapsedGameTime.TotalMilliseconds * Constants.groundAnimationVelocity);
+                groundLevel += (int)Math.Ceiling((target - groundLevel) * gameTime.ElapsedGameTime.TotalSeconds * Constants.groundAnimationDuration);
             }
         }
 

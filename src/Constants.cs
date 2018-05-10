@@ -23,7 +23,7 @@ namespace Justgrow
 
         // Specific constants
 
-        // Time in milliseconds for the wond to go from null to "tempest"
+        // Time in milliseconds for the wind to go from null to "tempest"
         public const float windLatency = 10000.0f;
 
         // The fade-in time of the main menu, in milliseconds
@@ -32,8 +32,13 @@ namespace Justgrow
         // The height of the ground
         public const float overviewRatio = 0.7f;
         
+        // The amount (in pixel) of grass / air that is visible in underground mode
         public const int groundOffset = 50;
-
-        public const float groundAnimationVelocity = 0.003f;
+        
+        // The duration of the animation when the grounch height changes
+        public const float groundAnimationDuration = 3f;
+        
+        // The width (in pixel) of a cell used by the tree elements
+        public const int cellWidth = 70;
     }
 }

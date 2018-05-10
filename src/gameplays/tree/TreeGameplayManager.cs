@@ -21,14 +21,10 @@ namespace Justgrow.Gameplays.Tree
     {
         protected Texture2D leaf;
         protected Texture2D branch;
-        protected Texture2D root;
         protected Texture2D cell;
 
         protected Generator treeGenerator;
-        protected Generator rootsGenerator;
         protected UndergroundGrid undergroundGrid;
-
-        Vector2 center;
 
         SpriteBatch spriteBatch;
 
@@ -65,9 +61,6 @@ namespace Justgrow.Gameplays.Tree
 
             // Create the tree generator
             treeGenerator = new Generator();
-
-            // Create the roots generator
-            rootsGenerator = new Generator();
         }
 
         protected void Generate()
@@ -87,20 +80,6 @@ namespace Justgrow.Gameplays.Tree
             treeGenerator.AddRule("F", 1f, "F F - [ - F + F + F ] + [ + F - F - F ]");
             treeGenerator.Generate(age);
 
-            rootsGenerator.InitialState.angleGrowth = 0.0f;
-            rootsGenerator.InitialState.sizeGrowth = 0.0f;
-            rootsGenerator.InitialState.windIntensity = 0.0f;
-            rootsGenerator.InitialState.angle = (float)Math.PI * 37f / 180f;
-            rootsGenerator.InitialState.diameter = 0;
-            rootsGenerator.InitialState.index = 0;
-            rootsGenerator.InitialState.heading = new Vector3(0f, 1f, 0f);
-            rootsGenerator.InitialState.left = new Vector3(-1f, 0f, 0f);
-            rootsGenerator.InitialState.up = new Vector3(0f, 0f, 1f);
-            rootsGenerator.InitialState.size = 10f;
-            rootsGenerator.Input = @"F";
-            rootsGenerator.AddRule("F", 1f, "F F - [ - F + F + F ] + [ + F - F - F ]");
-            rootsGenerator.Generate(Math.Min(3, age));
-
             /*generator.Input = @"A";
             generator.AddRule("A", 1f, @"[ & F L ! A ] / / / / / ' [ & F L ! A ] / / / / / / / ' [ & F L ! A ]");
             generator.AddRule("F", 1f, @"S / / / / / F");
@@ -113,7 +92,6 @@ namespace Justgrow.Gameplays.Tree
         {
             // Bind the rendering callbacks
             treeGenerator.onExecute += new Generator.OnExecuteDelegate(this.OnDrawBranch);
-            rootsGenerator.onExecute += new Generator.OnExecuteDelegate(this.OnDrawRoot);
 
             // First generation
             Generate();
@@ -122,11 +100,7 @@ namespace Justgrow.Gameplays.Tree
             ResourcesService resources = game.services.Get<ResourcesService>(ServicesDefinition.Resources);
             leaf = resources.Load<Texture2D>(Constants.textureLeaf);
             branch = resources.Load<Texture2D>(Constants.textureBranch);
-            root = resources.Load<Texture2D>(Constants.textureRoot);
             cell = resources.Load<Texture2D>(Constants.textureCell);
-
-            // Store  center
-            center = new Vector2(branch.Width / 2f, branch.Height);
         }
 
         public override void Update(GameTime gameTime)
@@ -139,7 +113,7 @@ namespace Justgrow.Gameplays.Tree
             BackgroundGameplayManager gpBackground = game.gameplays.Get<BackgroundGameplayManager>(GameplaysDefinition.Background);
 
             // Fill as many cells as possible
-            Vector2 center = new Vector2(0.5f * (Constants.windowHeight * Constants.windowRatio) - 0.5f * cell.Width, (float)gpBackground.GroundLevel);
+            Vector2 center = new Vector2(0.5f * (Constants.windowHeight * Constants.windowRatio) - 0.5f * Constants.cellWidth, (float)gpBackground.GroundLevel);
             int i = 0;
             int j = 0;
             bool yFinished = false;
@@ -148,22 +122,23 @@ namespace Justgrow.Gameplays.Tree
             {
                 while (true)
                 {
-                    Vector2 position = undergroundGrid.GetPosition(-i, j, center, cell.Width);
+                    Vector2 position = undergroundGrid.GetPosition(-i, j, center, Constants.cellWidth);
                     yFinished = (position.Y > Constants.windowHeight);
                     if (position.X <= 0f)
                     {
                         break;
                     }
-                    spriteBatch.Draw(cell, position, Color.White);
+                    spriteBatch.Draw(cell, position, null, Color.White, 0f, Vector2.Zero, (float)Constants.cellWidth / (float)cell.Width, SpriteEffects.None, 0f);
+                    
                     if (i != 0)
                     {
-                        Vector2 opposite = undergroundGrid.GetPosition(i, j, center, cell.Width);
-                        spriteBatch.Draw(cell, opposite, Color.White);
+                        Vector2 opposite = undergroundGrid.GetPosition(i, j, center, Constants.cellWidth);
+                        spriteBatch.Draw(cell, opposite, null, Color.White, 0f, Vector2.Zero, (float)Constants.cellWidth / (float)cell.Width, SpriteEffects.None, 0f);
                     }
 
                     i += 2;
                 }
-                j += 1;
+                j -= 1;
                 i = (j % 2);
             }
         }
@@ -173,15 +148,11 @@ namespace Justgrow.Gameplays.Tree
             // Get the background manager in order to know the ground level
             BackgroundGameplayManager gpBackground = game.gameplays.Get<BackgroundGameplayManager>(GameplaysDefinition.Background);
             treeGenerator.InitialState.position = new Vector3(0.5f * (Constants.windowHeight * Constants.windowRatio), (float)gpBackground.GroundLevel, 0f);
-            rootsGenerator.InitialState.position = new Vector3(0.5f * (Constants.windowHeight * Constants.windowRatio), (float)gpBackground.GroundLevel, 0f);
 
             // Render top of the tree
             WindGameplayManager gpWind = game.gameplays.Get<WindGameplayManager>(GameplaysDefinition.Wind);
             treeGenerator.InitialState.windIntensity = 0.003f * gpWind.Intensity;
             treeGenerator.Execute();
-
-            // Render the bottom of the tree
-            rootsGenerator.Execute();
         }
 
         protected void DrawRoots()
@@ -194,7 +165,51 @@ namespace Justgrow.Gameplays.Tree
 
         protected void DrawRoot(UndergroundCell cell, Direction direction)
         {
-            Console.WriteLine($"Rendering cell {cell.X},{cell.Y}");
+            // Get the objects we need for the rendering
+            ResourcesService resources = game.services.Get<ResourcesService>(ServicesDefinition.Resources);
+            BackgroundGameplayManager gpBackground = game.gameplays.Get<BackgroundGameplayManager>(GameplaysDefinition.Background);
+
+            // Draw the child root
+            {
+                // Get the texture matching the cell
+                Texture2D tex = resources.Load<Texture2D>($"textures/roots/root-in-{cell.Size}");
+
+                // Get the center of the rendering
+                Vector2 center = new Vector2(0.5f * tex.Width, 0.5f * tex.Height);
+                Vector2 offset = new Vector2(0.5f * (Constants.windowHeight * Constants.windowRatio), (float)(gpBackground.GroundLevel + 0.433f * Constants.cellWidth));
+                Vector2 position = undergroundGrid.GetPosition(cell.X, cell.Y, offset, Constants.cellWidth);
+                float rotation = undergroundGrid.GetAngle(direction);
+
+                // Render the root
+                spriteBatch.Draw(tex, position, null, Color.White, rotation, center, (float)Constants.cellWidth / (float)tex.Width, SpriteEffects.None, 0f);
+            }
+
+            // Draw the parent root
+            {
+                // Get the texture matching the cell
+                Texture2D tex = resources.Load<Texture2D>($"textures/roots/root-out-{cell.Size}");
+
+                // Get the parent cell
+                UndergroundCell parent  =  null;
+                Tuple<int, int> coordinates = undergroundGrid.GetNeighbourCoordinates(cell, undergroundGrid.GetOppositeDirection(direction));
+                if (undergroundGrid.IsCellCreated(coordinates.Item1, coordinates.Item2))
+                {
+                    parent = undergroundGrid[coordinates.Item1, coordinates.Item2];
+                }
+                if (parent != null)
+                {
+                    // Get the center of the rendering
+                    Vector2 center = new Vector2(0.5f * tex.Width, 0.5f * tex.Height);
+                    Vector2 offset = new Vector2(0.5f * (Constants.windowHeight * Constants.windowRatio), (float)(gpBackground.GroundLevel + 0.433f * Constants.cellWidth));
+                    Vector2 position = undergroundGrid.GetPosition(parent.X, parent.Y, offset, Constants.cellWidth);
+                    float rotation = undergroundGrid.GetAngle(undergroundGrid.GetOppositeDirection(direction));
+
+                    // Render the root
+                    spriteBatch.Draw(tex, position, null, Color.White, rotation, center, (float)Constants.cellWidth / (float)tex.Width, SpriteEffects.None, 0f);
+
+                    Console.WriteLine($"Draw parent {coordinates.Item1},{coordinates.Item2} with size {cell.Size}");
+                }
+            }            
         }
 
         public override void DrawSprites(GameTime gameTime, SpriteBatch spriteBatch)
@@ -203,7 +218,7 @@ namespace Justgrow.Gameplays.Tree
             this.spriteBatch = spriteBatch;
 
             // Draw the tree
-            // DrawTree();
+            DrawTree();
 
             // Draw the root cells
             DrawGrid();
@@ -228,22 +243,6 @@ namespace Justgrow.Gameplays.Tree
                 float rotation = (float)(Math.PI / 2) - direction;
                 spriteBatch.Draw(tex, origin, null, Color.White, rotation, center, scale, SpriteEffects.None, 0f);
             }
-        }
-
-        protected void OnDrawRoot(bool isBranch, State current, Vector3 from, Vector3 to)
-        {
-            // Draw a root
-            // Projection of the 3D-coordinates on 2D, using orthogonal projection (no perspective)
-            Vector2 center = new Vector2(root.Width / 2f, root.Height);                
-            float length = (float)Math.Sqrt((to.X - from.X) * (to.X - from.X) + (to.Y - from.Y) * (to.Y - from.Y));
-            if (length > 0f)
-            {                
-                Vector2 origin = new Vector2(from.X, from.Y);
-                float direction = (float)Math.Acos((to.X - from.X) / length);
-                float scale = length / root.Height;
-                float rotation = (float)(Math.PI / 2) + direction;
-                spriteBatch.Draw(root, origin, null, Color.White, rotation, center, scale, SpriteEffects.None, 0f);
-            }
-        }        
+        }      
     }
 }

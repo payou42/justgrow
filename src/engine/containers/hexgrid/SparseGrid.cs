@@ -59,7 +59,7 @@ namespace Justgrow.Engine.Containers.Hexgrid
                 case Direction.Bottom: return new Tuple<int, int>(i, j - 2);
                 case Direction.BottomLeft: return new Tuple<int, int>(i - 1, j - 1);
                 case Direction.BottomRight: return new Tuple<int, int>(i + 1, j - 1);
-                case Direction.Top: return new Tuple<int, int>(i, j + 1);
+                case Direction.Top: return new Tuple<int, int>(i, j + 2);
                 case Direction.TopLeft: return new Tuple<int, int>(i - 1, j + 1);
                 case Direction.TopRight: return new Tuple<int, int>(i + 1, j + 1);
             }
@@ -85,7 +85,7 @@ namespace Justgrow.Engine.Containers.Hexgrid
         public Vector2 GetPosition(int i, int j, Vector2 offset, float size = 1f)
         {
             float x = 0.75f * i;
-            float y = 0.5f * CellHeight * j;
+            float y = -0.5f * CellHeight * j;
             return new Vector2(x * size + offset.X, y * size + offset.Y);
         }
 

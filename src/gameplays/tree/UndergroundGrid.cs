@@ -28,13 +28,19 @@ namespace Justgrow.Gameplays.Tree
             // Create some test data
             UndergroundCell root = this[0, 0];
             root.Size = 3;
+            GetNeighbour(root, Direction.BottomLeft).Size = 1;
+            GetNeighbour(root, Direction.BottomRight).Size = 1;
 
-            UndergroundCell leftMain = GetNeighbour(0, 0, Direction.BottomLeft);
+            UndergroundCell under = GetNeighbour(root, Direction.Bottom);
+            under.Size = 3;
+            GetNeighbour(under, Direction.Bottom).Size = 2;
+
+            UndergroundCell leftMain = GetNeighbour(under, Direction.BottomLeft);
             leftMain.Size = 2;
             GetNeighbour(leftMain, Direction.TopLeft).Size = 1;
             GetNeighbour(leftMain, Direction.BottomLeft).Size = 1;
 
-            UndergroundCell rightMain = GetNeighbour(0, 0, Direction.BottomRight);
+            UndergroundCell rightMain = GetNeighbour(under, Direction.BottomRight);
             rightMain.Size = 2;
             GetNeighbour(rightMain, Direction.TopRight).Size = 1;
             GetNeighbour(rightMain, Direction.BottomRight).Size = 1;
@@ -88,6 +94,35 @@ namespace Justgrow.Gameplays.Tree
                 }
                 
             }
+        }
+
+        public Direction GetOppositeDirection(Direction d)
+        {
+            switch (d)
+            {
+                case Direction.Bottom: return Direction.Top;
+                case Direction.Top: return Direction.Bottom;                
+                case Direction.BottomRight: return Direction.TopLeft;                
+                case Direction.TopRight: return Direction.BottomLeft;
+                case Direction.BottomLeft: return Direction.TopRight;              
+                case Direction.TopLeft: return Direction.BottomRight;
+            }
+            return Direction.Me;
+        }
+
+        public float GetAngle(Direction childDirection)
+        {
+            float step = (float)(0.33333f * Math.PI);
+            switch (childDirection)
+            {
+                case Direction.Bottom: return 0.0f;
+                case Direction.Top: return (float)Math.PI;                
+                case Direction.BottomRight: return -step;                
+                case Direction.TopRight: return -2f * step;
+                case Direction.BottomLeft: return step;              
+                case Direction.TopLeft: return 2f * step;
+            }
+            return 0.0f;
         }
     }
 }
